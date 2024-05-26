@@ -1,3 +1,5 @@
+import os
+
 import tensorflow as tf
 from tensorflow import keras
 from keras import layers
@@ -5,15 +7,15 @@ from keras.preprocessing.image import ImageDataGenerator
 import numpy as np
 from PIL import Image
 
-# Задаем параметры обучения
+# Define hyperparameters
 batch_size = 32
-epochs = 10
+epochs = 8
 
-# Создаем генератор изображений для автоматической загрузки и предобработки данных
+# Generate data for training and validation
 datagen = ImageDataGenerator(rescale=1.0 / 255, validation_split=0.2)
 
 train_generator = datagen.flow_from_directory(
-    directory='archive/train',
+    directory='directory/train',
     target_size=(32, 32),
     batch_size=batch_size,
     class_mode='binary',
@@ -21,17 +23,17 @@ train_generator = datagen.flow_from_directory(
 )
 
 validation_generator = datagen.flow_from_directory(
-    directory='archive/train',
+    directory='directory/train',
     target_size=(32, 32),
     batch_size=batch_size,
     class_mode='binary',
     subset='validation'
 )
 
-train_mode = False
+activation_mode = input('Select training or testing mode ("train" or "test"): ')
 
-if train_mode:
-    # Создаем модель нейронной сети
+if activation_mode == 'train':
+    # Create a neural network model
     model = keras.Sequential([
         layers.Conv2D(32, (3, 3), activation='relu', input_shape=(32, 32, 3)),
         layers.MaxPooling2D((2, 2)),
@@ -44,26 +46,26 @@ if train_mode:
         layers.Dense(1, activation='sigmoid')
     ])
 
-    # Компилируем модель
+    # Compile the model
     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
-    # Обучаем модель
-    model.fit(train_generator, validation_data=validation_generator, epochs=epochs)
+    # Train the model
+    history = model.fit(train_generator, validation_data=validation_generator, epochs=epochs)
 
-    # Оцениваем модель на тестовых данных
+    # Evaluate the model
     test_loss, test_acc = model.evaluate(validation_generator)
     print(f'Test accuracy: {test_acc}')
 
-    print("Обучение завершено")
+    print("Evaluation complete")
 
     # Сохранение модели
     model.save('trained_model.keras')
 
-else:
-    # Загрузка сохраненной модели
+elif activation_mode == 'test':
+    # Load the trained model
     model = tf.keras.models.load_model('trained_model.keras')
 
-    # Создаем генератор изображений для тестовых данных
+    # Create a data generator for the test set
     test_datagen = ImageDataGenerator(rescale=1.0 / 255)
     test_generator = test_datagen.flow_from_directory(
         directory='archive/test',
@@ -73,31 +75,37 @@ else:
         shuffle=False
     )
 
-    # Предсказываем классы для изображений в тестовом наборе
-    predictions = model.predict(test_generator)
-
-    # Функция для загрузки и обработки входного изображения
+    # Function to load and preprocess an image
     def load_and_preprocess_image(image_pth):
-        # Загрузка изображения и изменение размера на 32x32 пикселя
+        # Load the images of the test set
         img = Image.open(image_pth)
         img = img.resize((32, 32))
         img = img.convert('RGB')
-        img = np.array(img) / 255.0  # Нормализация значений пикселей
+        img = np.array(img) / 255.0  # Normalize the image
         return img
 
 
-    # Путь к изображению для тестирования
-    image_path = 'archive/test/FAKE/1.jpg'
+    # Path to the image to test
+    image_path = input('Paste the path to the image/images you want to test: ')
 
-    # Загрузка и предобработка изображения
+    if not os.path.isfile(image_path):
+        print("Invalid path, please enter a valid path to an image.")
+
+    # Load and preprocess the image
     input_image = load_and_preprocess_image(image_path)
+    input_image = np.expand_dims(input_image, axis=0)
 
-    # Порог для классификации (например, 0.5 - если предсказание больше 0.5, то классифицируем как REAL, иначе как FAKE)
+    # Predict the class of the image
+    prediction = model.predict(input_image)
+
+    # Define the threshold for classification
     threshold = 0.5
 
-    # Классифицируем изображения
-    classified_images = ["REAL" if prediction > threshold else "FAKE" for prediction in predictions]
+    # Classify the image
+    classified_image = "REAL" if prediction > threshold else "FAKE"
 
-    # Выводим результаты классификации
-    for i, image_path in enumerate(test_generator.filepaths):
-        print(f"Image {i + 1}: {classified_images[i]} - {predictions[i][0] * 100:.2f} % (Probability)")
+    # Print the result
+    print(f"Image: {classified_image} - {prediction[0][0] * 100:.2f} % (Probability)")
+
+else:
+    print('Invalid mode, please select "train" or "test"')
