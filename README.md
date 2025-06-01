@@ -1,29 +1,89 @@
-# Image Classification Project
+# Image Classification Project: Real vs Fake Image Detector
 
-This project is a simple image classification model built with Python and TensorFlow. It uses a Convolutional Neural Network (CNN) to classify images as either "REAL" or "FAKE".
+This project implements a Convolutional Neural Network (CNN) using TensorFlow and Keras to classify images as either "REAL" or "FAKE". The model uses multiple convolutional layers with data augmentation techniques to improve classification accuracy.
+
+## Project Structure
+
+- `src/main.py`: Main Python script containing model architecture, training and testing functions
+- `archive/train/`: Directory containing training images organized in class subdirectories
+- `trained_model.keras`: Saved model file after training (stored using Git LFS)
+
+## Features
+
+- Binary image classification (REAL/FAKE)
+- Data augmentation (rotation, shifting, zoom, flip) to improve model generalization
+- Early stopping to prevent overfitting
+- Interactive CLI for training and testing
+- Confidence score reporting for predictions
 
 ## Requirements
 
-- Python
-- TensorFlow
-- Keras
-- PIL
-- numpy
+```
+tensorflow==2.19.0
+numpy==2.1.3
+keras==3.10.0
+pillow==11.2.1
+scipy==1.11.4
+```
 
-## How to Run
+## Installation
 
-1. Clone this repository.
-2. Install the required packages.
-3. Run `main.py`.
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/yourusername/image-classification.git
+   cd image-classification
+   ```
 
-## Training
+2. Install the required dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-To train the model, run `main.py` and enter "train" when prompted. The model will be trained using the images in the `directory/train` directory. The trained model will be saved as `trained_model.keras`.
+3. Pull the large files (if using the pre-trained model):
+   ```bash
+   git lfs pull
+   ```
 
-## Testing
+## Usage
 
-To test the model, run `main.py` and enter "test" when prompted. You will be asked to provide the path to the image you want to test. The model will classify the image as either "REAL" or "FAKE".
+Run the main script:
+```bash
+python src/main.py
+```
 
-## Note
+### Training Mode
 
-Please ensure that the images are in the correct directory and that the paths are correctly specified in the `main.py` file.
+Select "train" when prompted to train the model:
+- Images should be in the `archive/train` directory with appropriate class subdirectories
+- Default hyperparameters: batch_size=32, epochs=10
+- The model architecture uses three convolutional layers, followed by dense layers
+- Training progress and validation accuracy will be displayed
+- The trained model will be saved as `trained_model.keras`
+
+### Testing Mode
+
+Select "test" when prompted to test the model:
+- You will be asked to provide the path to an image for classification
+- The model will process the image and provide:
+  - Classification result (REAL or FAKE)
+  - Confidence percentage
+  - Raw prediction value
+
+## Git LFS Usage
+
+This repository uses Git Large File Storage (Git LFS) for managing large files such as:
+- The trained model file (`trained_model.keras`)
+- Any large dataset files
+
+To work with this repository, ensure you have Git LFS installed:
+```bash
+git lfs install
+```
+
+## Model Architecture
+
+The CNN architecture consists of:
+- 3 convolutional layers with ReLU activation and max pooling
+- Flatten layer to convert 2D feature maps to 1D features
+- 2 dense layers with the final layer using sigmoid activation for binary classification
+- Adam optimizer with binary crossentropy loss
