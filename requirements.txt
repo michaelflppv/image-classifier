@@ -1,0 +1,10 @@
+# TensorFlow for deep learning
+tensorflow==2.19.0
+# NumPy for numerical operations
+numpy==2.1.3
+# Keras for building neural network models
+keras==3.10.0
+# Pillow for image processing
+pillow==11.2.1
+# SciPy for scientific computing
+scipy==1.11.4
